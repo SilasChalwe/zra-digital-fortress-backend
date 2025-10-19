@@ -33,6 +33,20 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		
+		<!-- For WebClient -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+
+<!-- For JavaMailSender -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
+
+
 
 		<!-- Spring Data JPA: provides ORM support using Hibernate; useful for relational databases -->
 		<dependency>
@@ -41,11 +55,11 @@
 		</dependency>
 
 		<!-- Database Driver: H2 (in-memory) for quick testing; replace with MySQL/PostgreSQL in prod -->
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+		<!--<dependency>-->
+		<!--	<groupId>com.h2database</groupId>-->
+		<!--	<artifactId>h2</artifactId>-->
+		<!--	<scope>runtime</scope>-->
+		<!--</dependency>-->
 
 		<!-- MySQL Driver: uncomment this if you're using MySQL -->
 		<!--
@@ -55,6 +69,13 @@
 			<scope>runtime</scope>
 		</dependency>
 		-->
+		
+
+      <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <scope>runtime</scope>
+      </dependency>
 
 		<!-- Spring Security: adds authentication and authorization support -->
 		<dependency>
