@@ -4,56 +4,56 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Optional;
+
 public class SecurityUtils {
 
     private SecurityUtils() {
-        // Private constructor to prevent instantiation
+        throw new IllegalStateException("Utility class");
     }
 
-    /**
-     * Get the currently authenticated username.
-     *
-     * @return the username of the logged-in user, or null if not authenticated
-     */
-    public static String getCurrentUsername() {
+    public static Optional<String> getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        
         if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
+            return Optional.empty();
         }
 
         Object principal = authentication.getPrincipal();
+        
         if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
+            return Optional.of(((UserDetails) principal).getUsername());
         } else if (principal instanceof String) {
-            return (String) principal;
+            return Optional.of((String) principal);
         }
-
-        return null;
+        
+        return Optional.empty();
     }
 
-    /**
-     * Get the full Authentication object from the security context.
-     *
-     * @return Authentication object, or null if not authenticated
-     */
-    public static Authentication getAuthentication() {
-        return SecurityContextHolder.getContext().getAuthentication();
+    public static Optional<Authentication> getCurrentAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return Optional.ofNullable(authentication);
     }
 
-    /**
-     * Check if the currently authenticated user has a specific role.
-     *
-     * @param role the role to check (e.g., "ROLE_ADMIN")
-     * @return true if user has the role, false otherwise
-     */
+    public static boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated() 
+                && !(authentication.getPrincipal() instanceof String);
+    }
+
     public static boolean hasRole(String role) {
-        Authentication authentication = getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return false;
-        }
+        return getCurrentAuthentication()
+                .map(auth -> auth.getAuthorities().stream()
+                        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_" + role)))
+                .orElse(false);
+    }
 
-        return authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(role));
+    public static boolean hasAnyRole(String... roles) {
+        for (String role : roles) {
+            if (hasRole(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

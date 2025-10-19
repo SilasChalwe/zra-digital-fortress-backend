@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to ZRA Digital Fortress</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f3f4f6;
+        }
+        .header {
+            background-color: #1e40af;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .content {
+            background-color: #f9fafb;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #1e40af;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+        .tpin-box {
+            background-color: #fff;
+            border: 2px solid #1e40af;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+            border-radius: 6px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to ZRA Digital Fortress</h1>
+    </div>
+    
+    <div class="content">
+        <p>Dear <b >User</b>,</p>
+        
+        <p>Thank you for registering with <strong>ZRA Digital Fortress</strong>. Your account has been created successfully.</p>
+        
+        <p>Your Taxpayer Identification Number (TPIN) is:</p>
+        
+        <div class="tpin-box" th:text="${tpin}">000000000</div>
+        
+        <p><strong>Important:</strong> Please keep this TPIN safe as you will need it to login and file your taxes.</p>
+        
+        <p>To activate your account, please verify your email address by clicking the button below:</p>
+        
+        <center>
+            <a th:href="${verificationLink}" class="button">Verify Email Address</a>
+        </center>
+        
+        <p>If the button doesn’t work, copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #1e40af;" th:text="${verificationLink}">http://example.com/verify</p>
+        
+        <p>This verification link will expire in 24 hours.</p>
+        
+        <p>If you did not create this account, please ignore this email.</p>
+        
+        <p>Best regards,<br><strong>ZRA Digital Fortress Team</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2024</span> Zambia Revenue Authority. All rights reserved.</p>
+        <p>This is an automated message, please do not reply to this email.</p>
+    </div>
+</body>
+</html>

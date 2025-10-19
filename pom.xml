@@ -22,6 +22,12 @@
 	</properties>
 
 	<dependencies>
+	  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+
+
 		<!-- Core Spring Boot dependency: provides auto-configuration, logging, and basic infrastructure -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -45,6 +51,11 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-mail</artifactId>
 </dependency>
+<!--<dependency>-->
+<!--    <groupId>org.eclipse.angus</groupId>-->
+<!--    <artifactId>angus-mail</artifactId>-->
+<!--    <version>2.0.3</version>-->
+<!--</dependency>-->
 
 
 

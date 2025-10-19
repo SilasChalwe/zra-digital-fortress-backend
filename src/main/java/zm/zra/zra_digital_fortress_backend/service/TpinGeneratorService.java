@@ -1,22 +1,14 @@
 package zm.zra.zra_digital_fortress_backend.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import zm.zra.zra_digital_fortress_backend.model.*;
-import zm.zra.zra_digital_fortress_backend.repository.*;
+import zm.zra.zra_digital_fortress_backend.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.Random;
-import java.util.UUID;
-
 
 @Service
 @Slf4j
-class TpinGeneratorService {
+public class TpinGeneratorService {
 
     private final UserRepository userRepository;
     private final Random random = new Random();
@@ -34,20 +26,11 @@ class TpinGeneratorService {
     }
 
     private String generateRandomTpin() {
-        // Format: 9 digits + 1 letter (e.g., 123456789A)
+        // Generate a 10-digit numeric TPIN (e.g., 1234567890)
         StringBuilder tpin = new StringBuilder();
-        for (int i = 0; i < 9; i++) {
-            tpin.append(random.nextInt(10));
+        for (int i = 0; i < 10; i++) {
+            tpin.append(random.nextInt(10)); // digits 0–9
         }
-        char letter = (char) ('A' + random.nextInt(26));
-        tpin.append(letter);
         return tpin.toString();
     }
 }
-
-
-
-
-
-
-
