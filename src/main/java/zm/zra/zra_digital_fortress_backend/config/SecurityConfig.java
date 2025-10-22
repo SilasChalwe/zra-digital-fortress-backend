@@ -18,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import zm.zra.zra_digital_fortress_backend.security.JwtAuthenticationFilter;
 import zm.zra.zra_digital_fortress_backend.security.UserDetailsServiceImpl;
-
+import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
