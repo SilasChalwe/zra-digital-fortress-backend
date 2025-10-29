@@ -65,4 +65,8 @@ public class TaxFilingRequest {
     private Double otherDeductions = 0.0;
 
     private Boolean saveDraft = false;
+    
+    @NotNull
+@PositiveOrZero
+private Double riskScore = 0.0;
 }
