@@ -66,7 +66,5 @@ public class TaxFilingRequest {
 
     private Boolean saveDraft = false;
     
-    @NotNull
-@PositiveOrZero
-private Double riskScore = 0.0;
+    
 }

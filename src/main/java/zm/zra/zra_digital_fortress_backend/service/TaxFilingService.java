@@ -36,106 +36,116 @@ public class TaxFilingService {
     private final ComplianceService complianceService;
     private final ObjectMapper objectMapper;
 
-    @Transactional
-    public TaxFilingResponse submitTaxFiling(String userId, TaxFilingRequest request) {
-        log.info("Processing tax filing for user: {}", userId);
+@Transactional
+public TaxFilingResponse submitTaxFiling(String userId, TaxFilingRequest request) {
+    log.info("Processing tax filing for user: {}", userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Check for duplicate filing
-        taxFilingRepository.findByUserAndTaxYearAndTaxPeriodAndTaxType(
-                user, 
-                request.getTaxYear(), 
-                request.getTaxPeriod(),
-                TaxFiling.TaxType.valueOf(request.getTaxType())
-        ).ifPresent(existing -> {
-            if (!existing.getStatus().equals(TaxFiling.FilingStatus.DRAFT)) {
-                throw new BadRequestException("Tax filing already exists for this period");
-            }
-        });
-
-        // Calculate tax
-        Map<String, Object> taxCalculation = taxCalculationService.calculateIncomeTax(request);
-
-        // Create Income Tax Filing
-        IncomeTaxFiling filing = new IncomeTaxFiling();
-        filing.setUser(user);
-        filing.setTaxType(TaxFiling.TaxType.INCOME_TAX);
-        filing.setTaxYear(request.getTaxYear());
-        filing.setTaxPeriod(request.getTaxPeriod());
-        filing.setStatus(request.getSaveDraft() ? 
-                TaxFiling.FilingStatus.DRAFT : TaxFiling.FilingStatus.SUBMITTED);
-
-        // Set income sources
-        filing.setEmploymentIncome(request.getEmploymentIncome());
-        filing.setBusinessIncome(request.getBusinessIncome());
-        filing.setRentalIncome(request.getRentalIncome());
-        filing.setInvestmentIncome(request.getInvestmentIncome());
-        filing.setOtherIncome(request.getOtherIncome());
-
-        // Set deductions
-        filing.setNappsaContributions(request.getNappsaContributions());
-        filing.setMedicalExpenses(request.getMedicalExpenses());
-        filing.setEducationExpenses(request.getEducationExpenses());
-        filing.setInsurancePremiums(request.getInsurancePremiums());
-        filing.setOtherDeductions(request.getOtherDeductions());
-
-        // Set calculated values
-        filing.setTotalIncome((Double) taxCalculation.get("totalIncome"));
-        filing.setTotalDeductions((Double) taxCalculation.get("totalDeductions"));
-        filing.setTaxableIncome((Double) taxCalculation.get("taxableIncome"));
-        filing.setTaxDue((Double) taxCalculation.get("totalTax"));
-
-        // Set tax brackets
-        filing.setTaxBracket1Amount((Double) taxCalculation.get("bracket1Amount"));
-        filing.setTaxBracket2Amount((Double) taxCalculation.get("bracket2Amount"));
-        filing.setTaxBracket3Amount((Double) taxCalculation.get("bracket3Amount"));
-        filing.setCalculatedTax((Double) taxCalculation.get("totalTax"));
-
-        // Store complete filing data as JSON
-        try {
-            filing.setFilingData(objectMapper.writeValueAsString(request));
-        } catch (JsonProcessingException e) {
-            log.error("Error serializing filing data", e);
+    // Check for duplicate filing
+    taxFilingRepository.findByUserAndTaxYearAndTaxPeriodAndTaxType(
+            user, 
+            request.getTaxYear(), 
+            request.getTaxPeriod(),
+            TaxFiling.TaxType.valueOf(request.getTaxType())
+    ).ifPresent(existing -> {
+        if (!existing.getStatus().equals(TaxFiling.FilingStatus.DRAFT)) {
+            throw new BadRequestException("Tax filing already exists for this period");
         }
+    });
 
-        if (!request.getSaveDraft()) {
-            filing.setSubmittedAt(LocalDateTime.now());
+    // Calculate tax
+    Map<String, Object> taxCalculation = taxCalculationService.calculateIncomeTax(request);
 
-            // AI Risk Assessment
-            Map<String, Object> riskAssessment = aiServiceClient.assessFraudRisk(filing);
-            filing.setRiskScore((Double) riskAssessment.get("riskScore"));
-            
-            // FIX: Handle JsonProcessingException for risk factors
-            try {
-                filing.setRiskFactors(objectMapper.writeValueAsString(riskAssessment.get("factors")));
-            } catch (JsonProcessingException e) {
-                log.error("Error serializing risk factors", e);
-            }
+    // Create Income Tax Filing
+    IncomeTaxFiling filing = new IncomeTaxFiling();
+    filing.setUser(user);
+    filing.setTaxType(TaxFiling.TaxType.INCOME_TAX);
+    filing.setTaxYear(request.getTaxYear());
+    filing.setTaxPeriod(request.getTaxPeriod());
+    filing.setStatus(request.getSaveDraft() ? 
+            TaxFiling.FilingStatus.DRAFT : TaxFiling.FilingStatus.SUBMITTED);
 
-            // Record on blockchain
-            String txHash = blockchainService.recordTaxFiling(filing);
-            filing.setBlockchainTxHash(txHash);
+    // Set income sources
+    filing.setEmploymentIncome(request.getEmploymentIncome());
+    filing.setBusinessIncome(request.getBusinessIncome());
+    filing.setRentalIncome(request.getRentalIncome());
+    filing.setInvestmentIncome(request.getInvestmentIncome());
+    filing.setOtherIncome(request.getOtherIncome());
 
-            // Update compliance score
-            complianceService.updateComplianceScore(user, filing);
+    // Set deductions
+    filing.setNappsaContributions(request.getNappsaContributions());
+    filing.setMedicalExpenses(request.getMedicalExpenses());
+    filing.setEducationExpenses(request.getEducationExpenses());
+    filing.setInsurancePremiums(request.getInsurancePremiums());
+    filing.setOtherDeductions(request.getOtherDeductions());
 
-            // Send notification
-            notificationService.sendFilingConfirmation(user, filing);
-        }
+    // Set calculated values
+    filing.setTotalIncome((Double) taxCalculation.get("totalIncome"));
+    filing.setTotalDeductions((Double) taxCalculation.get("totalDeductions"));
+    filing.setTaxableIncome((Double) taxCalculation.get("taxableIncome"));
+    filing.setTaxDue((Double) taxCalculation.get("totalTax"));
 
-        filing = taxFilingRepository.save(filing);
+    // Set tax brackets
+    filing.setTaxBracket1Amount((Double) taxCalculation.get("bracket1Amount"));
+    filing.setTaxBracket2Amount((Double) taxCalculation.get("bracket2Amount"));
+    filing.setTaxBracket3Amount((Double) taxCalculation.get("bracket3Amount"));
+    filing.setCalculatedTax((Double) taxCalculation.get("totalTax"));
 
-        // Log action
-        auditLogService.logAction(userId, "TAX_FILING_SUBMITTED", 
-                AuditLog.EntityType.TAX_FILING, filing.getId(), 
-                "Tax filing " + (request.getSaveDraft() ? "saved as draft" : "submitted"));
-
-        log.info("Tax filing completed: {}", filing.getId());
-
-        return buildTaxFilingResponse(filing, taxCalculation);
+    // Store complete filing data as JSON
+    try {
+        filing.setFilingData(objectMapper.writeValueAsString(request));
+    } catch (JsonProcessingException e) {
+        log.error("Error serializing filing data", e);
     }
+
+    // FIX: Set default risk score for draft filings
+    if (request.getSaveDraft()) {
+        // Set default values for draft
+        filing.setRiskScore(0.0); // Default risk score for drafts
+        try {
+            filing.setRiskFactors(objectMapper.writeValueAsString(List.of("DRAFT")));
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing default risk factors", e);
+        }
+    } else {
+        filing.setSubmittedAt(LocalDateTime.now());
+
+        // AI Risk Assessment
+        Map<String, Object> riskAssessment = aiServiceClient.assessFraudRisk(filing);
+        filing.setRiskScore((Double) riskAssessment.get("riskScore"));
+        
+        // FIX: Handle JsonProcessingException for risk factors
+        try {
+            filing.setRiskFactors(objectMapper.writeValueAsString(riskAssessment.get("factors")));
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing risk factors", e);
+        }
+
+        // Record on blockchain
+        String txHash = blockchainService.recordTaxFiling(filing);
+        filing.setBlockchainTxHash(txHash);
+
+        // Update compliance score
+        complianceService.updateComplianceScore(user, filing);
+
+        // Send notification
+        notificationService.sendFilingConfirmation(user, filing);
+    }
+
+    filing = taxFilingRepository.save(filing);
+
+    // Log action
+    auditLogService.logAction(userId, "TAX_FILING_SUBMITTED", 
+            AuditLog.EntityType.TAX_FILING, filing.getId(), 
+            "Tax filing " + (request.getSaveDraft() ? "saved as draft" : "submitted"));
+
+    log.info("Tax filing completed: {}", filing.getId());
+
+    return buildTaxFilingResponse(filing, taxCalculation);
+}
+    
 
     public List<TaxFilingResponse> getUserFilings(String userId) {
         User user = userRepository.findById(userId)
