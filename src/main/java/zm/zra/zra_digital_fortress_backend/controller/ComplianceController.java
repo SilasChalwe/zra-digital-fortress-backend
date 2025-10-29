@@ -9,10 +9,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import zm.zra.zra_digital_fortress_backend.dto.response.ApiResponse;
+import zm.zra.zra_digital_fortress_backend.dto.response.ComplianceScoreResponse;
 import zm.zra.zra_digital_fortress_backend.model.ComplianceScore;
 import zm.zra.zra_digital_fortress_backend.model.User;
 import zm.zra.zra_digital_fortress_backend.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +29,7 @@ public class ComplianceController {
 
     @GetMapping("/score")
     @Operation(summary = "Get compliance score for current user")
-    public ResponseEntity<ApiResponse<ComplianceScore>> getComplianceScore(
+    public ResponseEntity<ApiResponse<ComplianceScoreResponse>> getComplianceScore(
             @AuthenticationPrincipal UserDetails userDetails) {
 
         User user = userRepository.findByEmail(userDetails.getUsername())
@@ -35,20 +37,47 @@ public class ComplianceController {
 
         ComplianceScore score = user.getComplianceScore();
 
+        ComplianceScoreResponse scoreResponse;
         if (score == null) {
-            score = ComplianceScore.builder()
+            scoreResponse = ComplianceScoreResponse.builder()
                     .overallScore(0)
                     .timelyFilingScore(0)
                     .accuracyScore(0)
                     .paymentHistoryScore(0)
                     .engagementScore(0)
+                    .totalFilings(0)
+                    .onTimeFilings(0)
+                    .lateFilings(0)
+                    .totalPayments(0)
+                    .onTimePayments(0)
+                    .latePayments(0)
+                    .consecutiveOnTimeFilings(0)
+                    .badges("[]")
+                    .lastUpdated(LocalDateTime.now())
+                    .build();
+        } else {
+            scoreResponse = ComplianceScoreResponse.builder()
+                    .overallScore(score.getOverallScore())
+                    .timelyFilingScore(score.getTimelyFilingScore())
+                    .accuracyScore(score.getAccuracyScore())
+                    .paymentHistoryScore(score.getPaymentHistoryScore())
+                    .engagementScore(score.getEngagementScore())
+                    .totalFilings(score.getTotalFilings())
+                    .onTimeFilings(score.getOnTimeFilings())
+                    .lateFilings(score.getLateFilings())
+                    .totalPayments(score.getTotalPayments())
+                    .onTimePayments(score.getOnTimePayments())
+                    .latePayments(score.getLatePayments())
+                    .consecutiveOnTimeFilings(score.getConsecutiveOnTimeFilings())
+                    .badges(score.getBadges())
+                    .lastUpdated(LocalDateTime.now()) // Or use score.getLastUpdated() if available in entity
                     .build();
         }
 
-        return ResponseEntity.ok(ApiResponse.<ComplianceScore>builder()
+        return ResponseEntity.ok(ApiResponse.<ComplianceScoreResponse>builder()
                 .success(true)
                 .message("Compliance score retrieved successfully")
-                .data(score)
+                .data(scoreResponse)
                 .build());
     }
 
@@ -114,6 +143,20 @@ public class ComplianceController {
             stats.put("onTimePayments", score.getOnTimePayments());
             stats.put("latePayments", score.getLatePayments());
             stats.put("complianceLevel", getComplianceLevel(score.getOverallScore()));
+        } else {
+            // Provide default values when score is null
+            stats.put("overallScore", 0);
+            stats.put("timelyFilingScore", 0);
+            stats.put("accuracyScore", 0);
+            stats.put("paymentHistoryScore", 0);
+            stats.put("engagementScore", 0);
+            stats.put("totalFilings", 0);
+            stats.put("onTimeFilings", 0);
+            stats.put("lateFilings", 0);
+            stats.put("totalPayments", 0);
+            stats.put("onTimePayments", 0);
+            stats.put("latePayments", 0);
+            stats.put("complianceLevel", "NEW");
         }
 
         return ResponseEntity.ok(ApiResponse.<Map<String, Object>>builder()
